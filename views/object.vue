@@ -29,16 +29,16 @@ export default {
     submit(objectId) {
       const commentElement = document.querySelector("input[name=comment]");
       const comment = commentElement.value.trim();
+      if (!comment)
+        return;
+
       if (!this.comments)
-        this.comments = []
+        this.comments = [];
 
       this.comments.push({
         id: this.comments.length + 1,
         value: comment
       });
-
-      if (!comment)
-        return; 
 
       const formData = new FormData();
       formData.append("comment", comment);
@@ -51,15 +51,15 @@ export default {
         }
       )
       .then(response => {
-        commentElement.value = ''; 
+        commentElement.value = '';
       });
-    }  
+    }
   }
 }
 </script>
 
 <style>
   img {
-    width: 512px;    
+    width: 512px;
   }
 </style>

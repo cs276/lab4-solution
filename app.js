@@ -44,7 +44,7 @@ const expressVueMiddleware = expressVue.init(vueOptions);
 app.use(expressVueMiddleware);
 
 const API_KEY='43a19a70-b76e-11e8-bf0e-e9322ccde4db';
-const comments = {};
+const comments = [];
 
 /**
  * Makes a GET request to url and returns JSON response as JavaScript object.
