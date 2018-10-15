@@ -32,9 +32,6 @@ export default {
       if (!comment)
         return;
 
-      if (!this.comments)
-        this.comments = [];
-
       this.comments.push({
         id: this.comments.length + 1,
         value: comment

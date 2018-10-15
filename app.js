@@ -2,6 +2,7 @@ const express = require('express');
 const expressVue = require('express-vue');
 const multer = require('multer');
 const path = require('path');
+const { URL } = require('url');
 require('cross-fetch/polyfill');
 
 const hostname = '127.0.0.1';
@@ -11,6 +12,7 @@ const port = 3000;
 const app = express();
 app.use(express.static('static'));
 
+// Handle form data
 const upload = multer();
 
 // Options for express-vue
@@ -46,11 +48,19 @@ app.use(expressVueMiddleware);
 const API_KEY='43a19a70-b76e-11e8-bf0e-e9322ccde4db';
 const comments = [];
 
-/**
- * Makes a GET request to url and returns JSON response as JavaScript object.
- */
+
+// GETs url and returns JSON response as JavaScript object
 function getJSON(url) {
     return fetch(url).then(response => response.json());
+}
+
+
+// Wraps endpoint with base URL and adds apikey
+function getURL(endpoint, params={}) {
+  params.apikey = API_KEY;
+  const url = new URL(`https://api.harvardartmuseums.org/${endpoint}`);
+  Object.keys(params).forEach(p => url.searchParams.append(p, params[p]));
+  return url;
 }
 
 
@@ -58,6 +68,7 @@ function getJSON(url) {
 app.get('/', (req, res) => {
   let galleries = [];
 
+  // Recursively fetches galleries and returns last call promise
   function getGalleries(url) {
     return getJSON(url)
       .then(data => {
@@ -67,7 +78,8 @@ app.get('/', (req, res) => {
       });
   }
 
-  getGalleries(`https://api.harvardartmuseums.org/gallery?size=100&apikey=${API_KEY}`).then(() => {
+  // Render template once last promise is resolved
+  getGalleries(getURL('gallery')).then(() => {
     res.renderVue('index.vue', {galleries});
   });
 });
@@ -75,6 +87,8 @@ app.get('/', (req, res) => {
 // List objects
 app.get('/gallery/:gallery_id', (req, res) => {
   let objects = [];
+
+  // Recursively fetches objects and returns last call promise
   function getObjects(url) {
     return getJSON(url)
       .then(data => {
@@ -84,16 +98,23 @@ app.get('/gallery/:gallery_id', (req, res) => {
       });
   }
 
-  getObjects(`https://api.harvardartmuseums.org/object?apikey=${API_KEY}&gallery=${req.params.gallery_id}`).then(() => {
+  // Render template once last promise is resolved
+  getObjects(getURL('object', { gallery: req.params.gallery_id })).then(() => {
     res.renderVue('gallery.vue', {objects});
   });
 });
 
 // Show object
 app.get('/objects/:object_id', (req, res) => {
-  getJSON(`https://api.harvardartmuseums.org/object/${req.params.object_id}?apikey=${API_KEY}`)
+  getJSON(getURL(`object/${req.params.object_id}`))
     .then(object => {
-      res.renderVue('object.vue', {object, comments: comments[req.params.object_id]});
+      res.renderVue(
+        'object.vue',
+        {
+          object,
+          comments: comments[req.params.object_id] || []
+        }
+      );
     });
 });
 
@@ -106,8 +127,8 @@ app.post('/objects/:object_id/comment', upload.fields([]), (req, res) => {
     comments[req.params.object_id]= [];
 
   comments[req.params.object_id].push({
-      id: comments.length + 1,
-      value: req.body.comment
+    id: comments.length + 1,
+    value: req.body.comment
   });
 
   res.sendStatus(200);
