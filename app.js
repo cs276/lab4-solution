@@ -125,7 +125,7 @@ app.get('/gallery/:gallery_id', (req, res) => {
           },
           {
             'key': 'primaryimageurl',
-					  'label': 'Image'
+            'label': 'Image'
           },
           {
             'key': 'url',
