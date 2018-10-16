@@ -1,6 +1,7 @@
 <template>
   <div>
     <h1>Object Information</h1>
+
     <ul>
       <li>Title: {{object.title}}</li>
       <li v-if="object.description">Description: {{object.description}}</li>
@@ -10,12 +11,13 @@
     </ul>
 
     <h2>Comments</h2>
-    <ul>
-      <li v-for="comment in comments" :key="comment.id">{{comment.value}}</li>
-    </ul>
-    <form v-on:submit.prevent="submit(object.id)">
-      <input class="form-control" type="text" name="comment" placeholder="Write a comment...">
-      <button class="btn btn-primary" type="submit">Post</button>
+		<b-list-group>
+			<b-list-group-item v-for="comment in comments" :key="comment.id">{{comment.value}}</b-list-group-item>
+		</b-list-group>
+
+    <form class="mt-2" v-on:submit.prevent="submit(object.id)">
+      <b-form-input type="text" name="comment" placeholder="Write a comment..."></b-form-input>
+      <b-button class="mt-2" type="submit" variant="primary">Post</b-button>
     </form>
   </div>
 </template>

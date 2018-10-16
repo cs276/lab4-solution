@@ -33,9 +33,22 @@ const vueOptions = {
         style: '/css/styles.css'
       },
       {
-        style: 'https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css'
+        style: 'https://unpkg.com/bootstrap/dist/css/bootstrap.min.css'
+      },
+      {
+        style: 'https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.css'
       }
     ]
+  },
+  template: {
+    body: {
+      start: `
+        <body>
+          <script src="//unpkg.com/babel-polyfill@latest/dist/polyfill.min.js"></script>
+          <script src="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.js"></script>
+      `,
+      end: '</body>'
+    }
   },
   rootPath: path.join(__dirname, '/views')
 };
@@ -100,7 +113,28 @@ app.get('/gallery/:gallery_id', (req, res) => {
 
   // Render template once last promise is resolved
   getObjects(getURL('object', { gallery: req.params.gallery_id })).then(() => {
-    res.renderVue('gallery.vue', {objects});
+    res.renderVue(
+      'gallery.vue',
+      {
+        objects,
+        fields: [
+          {
+            'key': 'title'
+          },
+          {
+            'key': 'id'
+          },
+          {
+            'key': 'primaryimageurl',
+					  'label': 'Image'
+          },
+          {
+            'key': 'url',
+            'label': 'More Information'
+          }
+        ]
+      }
+    );
   });
 });
 

@@ -1,20 +1,24 @@
 <template>
   <div>
     <h1>Object Listing</h1>
-    <table>
-      <tr v-for="object in objects">
-        <td>
-          <a :href="`/objects/${object.id}`">{{object.title}}</a>
-        </td>
-        <td>
-          <img v-if="object.primaryimageurl" :src="object.primaryimageurl">
-          <span v-else>N/A</span>
-        </td>
-        <td>
-          <a :href="`${object.url}`">See more</a>
-        </td>
-      </tr>
-    </table>
+    <b-table :fields="fields" :items="objects">
+      <template slot="title" slot-scope="data">
+          <a :href="`/objects/${data.item.id}`">{{data.item.title}}</a>
+      </template>
+
+      <template slot="id" slot-scope="data">
+        {{data.item.id}}
+      </template>
+
+      <template slot="primaryimageurl" slot-scope="data">
+        <img v-if="data.item.primaryimageurl" :src="data.item.primaryimageurl">
+        <span v-else>N/A</span>
+      </template>
+
+      <template slot="url" slot-scope="data">
+          <a :href="`${data.item.url}`">Harvard Art Museums</a>
+      </template>
+    </b-table>
   </div>
 </template>
 
