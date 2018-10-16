@@ -1,6 +1,6 @@
+const bodyParser = require('body-parser');
 const express = require('express');
 const expressVue = require('express-vue');
-const multer = require('multer');
 const path = require('path');
 require('cross-fetch/polyfill');
 
@@ -12,7 +12,7 @@ const app = express();
 app.use(express.static('static'));
 
 // Handle form data
-const upload = multer();
+app.use(bodyParser.urlencoded({ extended: false }));
 
 // Options for express-vue
 const vueOptions = {
@@ -152,12 +152,13 @@ app.get('/objects/:object_id', (req, res) => {
 });
 
 // Comment on object
-app.post('/objects/:object_id/comment', upload.fields([]), (req, res) => {
+app.post('/objects/:object_id/comment', (req, res) => {
+  console.log(req.body)
   if (!req.body || !req.body.comment || !req.body.comment.trim())
     res.sendStatus(400);
 
   if (!comments[req.params.object_id])
-    comments[req.params.object_id]= [];
+    comments[req.params.object_id] = [];
 
   comments[req.params.object_id].push({
     id: comments.length + 1,

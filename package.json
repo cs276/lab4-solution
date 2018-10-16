@@ -48,9 +48,9 @@
   },
   "homepage": "https://github.com/cs276/lab4#readme",
   "dependencies": {
+    "body-parser": "^1.18.3",
     "cross-fetch": "^2.2.2",
     "express": "^4.16.4",
-    "express-vue": "^5.7.1",
-    "multer": "^1.4.1"
+    "express-vue": "^5.7.1"
   }
 }
