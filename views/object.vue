@@ -7,7 +7,7 @@
       <li v-if="object.description">Description: {{object.description}}</li>
       <li v-if="object.provenance">Provenance: {{object.provenance}}</li>
       <li>Accession Year: {{object.accessionyear}}</li>
-      <img v-if="object.primaryimageurl" :src="`${object.primaryimageurl}`">
+      <img class="mt-2" v-if="object.primaryimageurl" :src="`${object.primaryimageurl}`">
     </ul>
 
     <h2>Comments</h2>
