@@ -153,7 +153,6 @@ app.get('/objects/:object_id', (req, res) => {
 
 // Comment on object
 app.post('/objects/:object_id/comment', (req, res) => {
-  console.log(req.body)
   if (!req.body || !req.body.comment || !req.body.comment.trim())
     res.sendStatus(400);
 
