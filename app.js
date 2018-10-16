@@ -2,7 +2,6 @@ const express = require('express');
 const expressVue = require('express-vue');
 const multer = require('multer');
 const path = require('path');
-const { URL } = require('url');
 require('cross-fetch/polyfill');
 
 const hostname = '127.0.0.1';
