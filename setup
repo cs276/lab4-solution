@@ -1,0 +1,6 @@
+CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, username VARCHAR UNIQUE NOT NULL, hash VARCHAR NOT NULL);
+CREATE TABLE books (isbn VARCHAR PRIMARY KEY, title VARCHAR NOT NULL, author VARCHAR NOT NULL, year INTEGER NOT NULL);
+CREATE INDEX i ON books(author);
+CREATE INDEX j ON books(title);
+.mode csv
+.import books.csv books
