@@ -12,7 +12,7 @@
 Run:
 
 ```
-npx nodemon ./app.js
+npm run dev
 ```
 
 then visit http://localhost:3000/ in your browser.
