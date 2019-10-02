@@ -29,11 +29,11 @@ function verifyToken(req, res, next) {
     const token = req.headers['authorization']
     try {
         const decoded = jwt.verify(token.replace("Bearer ", ""), jwtSecret)
-        if (!decoded.data || !Object.keys(decoded).length) {
+        if (!decoded.user || !Object.keys(decoded.user).length) {
             throw 'invalid token'
         }
 
-        req.user = decoded.data
+        req.user = decoded.user
         next()
     }
     catch (err) {
@@ -47,7 +47,7 @@ function verifyToken(req, res, next) {
  * user authentication
  */
 function getToken(id) {
-    return {token: jwt.sign({data: {id}, expiresIn: "7d"}, jwtSecret)}
+    return {token: jwt.sign({user: {id}}, jwtSecret)}
 }
 
 
@@ -114,7 +114,7 @@ app.post('/register', (req, res) => {
         bcrypt.hash(password, saltRounds, (err, hash) => {
 
             // Register user
-            db.run('INSERT INTO users (username, hash) VALUES (?, ?)', [username, hash], (err) => {
+            db.run('INSERT INTO users (username, hash) VALUES (?, ?)', [username, hash], function(err) {
                 if (err) {
                     res.status(400).json({error: `user ${username} already exists`})
                     return

@@ -27,6 +27,8 @@ const commentsContainer = document.querySelector('#comments-container')
 const commentTextArea = document.querySelector('textarea')
 const postCommentButton = document.querySelector('#post-comment')
 
+const noCommentsDiv = document.querySelector('#no-comments')
+
 const errorAlert = document.querySelector('#error-alert')
 
 let user = JSON.parse(localStorage.getItem('user')) || {}
@@ -103,7 +105,7 @@ function renderRegister() {
 }
 
 
-function appendReview(commentsContainer, review) {
+function appendReview(review) {
     const div = document.createElement('div')
     const authorInfo = document.createElement('small')
     authorInfo.classList.add('text-muted')
@@ -150,25 +152,29 @@ function renderBooks(data) {
             .then((data) => {
                 const {reviews} = data
                 commentsContainer.innerHTML = ''
+                commentTextArea.disabled = false
                 if (reviews.length < 1) {
-                    const noCommentsDiv = document.createElement('div')
-                    noCommentsDiv.classList.add('text-center')
-                    noCommentsDiv.append('No reviews yet')
-                    commentsContainer.append(noCommentsDiv)
+                    noCommentsDiv.classList.remove('d-none')
                     return
                 }
 
-                reviews.forEach(appendReview.bind(null, commentsContainer))
+                noCommentsDiv.classList.add('d-none')
+                let commented = false
+                reviews.forEach((review) => {
+                    appendReview(review)
+                    if (review.username === user.username) {
+                        commented = true
+                    }
+                })
+
+                if (commented) {
+                    commentTextArea.disabled = true
+                }
             })
 
             postCommentButton.onclick = () => {
                 const comment = commentTextArea.value
-                if (!comment) {
-
-                }
-
                 const isbn = book.isbn
-
                 fetch(
                     `/reviews`,
                     {
@@ -185,7 +191,9 @@ function renderBooks(data) {
                     commentTextArea.value = ''
                     const { review } = data
                     if (review) {
-                        appendReview(commentsContainer, review)
+                        noCommentsDiv.classList.add('d-none')
+                        appendReview(review)
+                        commentTextArea.disabled = true
                     }
                 })
             }
