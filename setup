@@ -1,6 +1,31 @@
-CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, username VARCHAR UNIQUE NOT NULL, hash VARCHAR NOT NULL);
-CREATE TABLE books (isbn VARCHAR PRIMARY KEY, title VARCHAR NOT NULL, author VARCHAR NOT NULL, year INTEGER NOT NULL);
-CREATE INDEX i ON books(author);
-CREATE INDEX j ON books(title);
+PRAGMA foreign_keys = ON;
+
+CREATE TABLE users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username VARCHAR UNIQUE NOT NULL,
+    hash VARCHAR NOT NULL
+);
+
+CREATE TABLE books (
+    isbn VARCHAR PRIMARY KEY,
+    title VARCHAR NOT NULL,
+    author VARCHAR NOT NULL,
+    year INTEGER NOT NULL
+);
+
+CREATE INDEX t on books(title);
+CREATE INDEX a on books(author);
+
+
+CREATE TABLE reviews (
+    user_id INTEGER NOT NULL,
+    book_isbn VARCHAR NOT NULL,
+    comment TEXT NOT NULL,
+    posted_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY(book_isbn) REFERENCES books(isbn),
+    PRIMARY KEY(user_id, book_isbn)
+);
+
 .mode csv
 .import books.csv books

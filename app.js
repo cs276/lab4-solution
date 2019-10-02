@@ -7,6 +7,9 @@ const path = require('path')
 const sqlite3 = require('sqlite3')
 const db = new sqlite3.Database('./books.db')
 
+// Enable foreign key support
+db.get('PRAGMA foreign_keys = ON')
+
 const jwtSecret = process.env.JWT_SECRET
 const saltRounds = parseInt(process.env.SALT_ROUNDS) || 10
 
@@ -25,10 +28,15 @@ app.use(bodyParser.json())
 function verifyToken(req, res, next) {
     const token = req.headers['authorization']
     try {
-        req.user = jwt.verify(token.replace("Bearer ", ""), jwtSecret)
+        const decoded = jwt.verify(token.replace("Bearer ", ""), jwtSecret)
+        if (!decoded.data || !Object.keys(decoded).length) {
+            throw 'invalid token'
+        }
+
+        req.user = decoded.data
         next()
     }
-    catch {
+    catch (err) {
         res.status(403).json({error: 'missing or invalid authorization header'})
     }
 }
@@ -39,7 +47,7 @@ function verifyToken(req, res, next) {
  * user authentication
  */
 function getToken(id) {
-    return {token: jwt.sign({id}, jwtSecret)}
+    return {token: jwt.sign({data: {id}, expiresIn: "7d"}, jwtSecret)}
 }
 
 
@@ -135,15 +143,79 @@ app.get('/books', verifyToken, (req, res) => {
     }
 
     db.all(
-        'SELECT * FROM books WHERE isbn LIKE ? OR title LIKE ? OR author LIKE ?',
+        [
+            'SELECT',
+                [
+                    'books.isbn',
+                    'books.title',
+                    'books.author',
+                    'books.year',
+                    // 'COUNT(reviews.comment) AS comment_count'
+                ].join(','),
+            'FROM books LEFT JOIN reviews',
+            'ON books.isbn = reviews.book_isbn',
+            'WHERE',
+                'books.isbn LIKE ? OR',
+                'books.title LIKE ? OR',
+                'books.author LIKE ?',
+            'GROUP BY books.isbn'
+        ].join(' '),
         [keyword, keyword, keyword],
-        (err, records) => {
-            res.json({records})
+        (err, books) => {
+            res.json({books})
         }
     )
+})
+
+
+app.post('/reviews', verifyToken, (req, res) => {
+    let { isbn, comment } = req.body
+    if (!isbn || !comment) {
+        res.status(400).json({error: 'must provide isbn and comment'})
+        return
+    }
+    else {
+        console.log(req.user.id)
+        db.run('INSERT INTO reviews (user_id, book_isbn, comment) VALUES (?, ?, ?)', [req.user.id, isbn, comment], (err) => {
+            if (err) {
+                console.error(err)
+                res.status(400).json({error: 'duplicate entry'})
+                return
+            }
+
+            db.get('SELECT reviews.comment, reviews.posted_at, users.username FROM reviews JOIN users ON reviews.user_id = users.id WHERE reviews.book_isbn = ? AND users.id = ?', [isbn, req.user.id], (err, review) => {
+                if (err) {
+                    res.status(500)
+                    return
+                }
+
+                res.json({review})
+            })
+        })
+    }
+})
+
+
+app.get('/reviews', verifyToken, (req, res) => {
+    const { isbn } = req.query
+    if (!isbn) {
+        res.status(400).json({error: 'must provide isbn'})
+        return
+    }
+
+    db.all('SELECT reviews.comment, reviews.posted_at, users.username FROM reviews JOIN users ON reviews.user_id = users.id WHERE reviews.book_isbn = ?', [isbn], (err, reviews) => {
+        if (err) {
+            res.status(500)
+            return
+        }
+
+        res.json({reviews})
+    })
 })
 
 
 app.listen(port, () => {
     console.log(`Listening on port ${port}!`)
 })
+
+db.on('trace', console.log)

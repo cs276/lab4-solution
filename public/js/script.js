@@ -22,9 +22,16 @@ const home = document.querySelector('#home')
 const hometBody = home.querySelector('tbody')
 const searchForm = home.querySelector('form')
 
+const commentsModal = document.querySelector('#commentsModalLongTitle')
+const commentsContainer = document.querySelector('#comments-container')
+const commentTextArea = document.querySelector('textarea')
+const postCommentButton = document.querySelector('#post-comment')
+
 const errorAlert = document.querySelector('#error-alert')
 
 let user = JSON.parse(localStorage.getItem('user')) || {}
+
+const totalStars = 5
 
 // Ensure user is logged in initially
 requireLogin()
@@ -96,6 +103,19 @@ function renderRegister() {
 }
 
 
+function appendReview(commentsContainer, review) {
+    const div = document.createElement('div')
+    const authorInfo = document.createElement('small')
+    authorInfo.classList.add('text-muted')
+    authorInfo.append(`${review.username} posted at ${review.posted_at}`)
+    const commentDiv = document.createElement('div')
+    commentDiv.classList.add('mb-2')
+    commentDiv.append(review.comment)
+    div.append(authorInfo, commentDiv)
+    commentsContainer.append(div)
+}
+
+
 function renderBooks(data) {
     hometBody.innerHTML = ''
     if (data.error) {
@@ -103,14 +123,81 @@ function renderBooks(data) {
         return
     }
 
-    data.records.forEach((row) => {
+    data.books.forEach((book) => {
+        const keys = Object.keys(book)
         const tr = document.createElement('tr')
-        Object.keys(row).forEach((key) => {
+        keys.slice(0, keys.length).forEach((key) => {
             const td = document.createElement('td')
-            td.append(row[key])
+            td.append(book[key])
             tr.append(td)
         })
 
+        const td = document.createElement('td')
+        const commentsButton = document.createElement('span')
+        commentsButton.classList.add('oi', 'oi-comment-square')
+        commentsButton.addEventListener('click', () => {
+            commentsModal.innerHTML = `${book.title}'s Reviews`
+
+            fetch(
+                `/reviews?isbn=${book.isbn}`,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${user.token}`
+                    }
+                }
+            )
+            .then((response) => response.json())
+            .then((data) => {
+                const {reviews} = data
+                commentsContainer.innerHTML = ''
+                if (reviews.length < 1) {
+                    const noCommentsDiv = document.createElement('div')
+                    noCommentsDiv.classList.add('text-center')
+                    noCommentsDiv.append('No reviews yet')
+                    commentsContainer.append(noCommentsDiv)
+                    return
+                }
+
+                reviews.forEach(appendReview.bind(null, commentsContainer))
+            })
+
+            postCommentButton.onclick = () => {
+                const comment = commentTextArea.value
+                if (!comment) {
+
+                }
+
+                const isbn = book.isbn
+
+                fetch(
+                    `/reviews`,
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${user.token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({isbn, comment})
+                    }
+                )
+                .then((response) => response.json())
+                .then((data) => {
+                    commentTextArea.value = ''
+                    const { review } = data
+                    if (review) {
+                        appendReview(commentsContainer, review)
+                    }
+                })
+            }
+
+            $('#commentsModalLong').modal()
+        })
+
+        td.append(commentsButton)
+
+        // td.append(` (${book.comment_count})`)
+
+        tr.append(td)
         hometBody.append(tr)
     })
 
